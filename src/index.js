@@ -6,7 +6,10 @@ import Handlebars from "handlebars";
 import fm from "front-matter";
 import stripBom from "strip-bom";
 
-
+import ifEqual from "./helpers/ifEqual.js";
+import repeat from "./helpers/repeat.js";
+import ifPage from "./helpers/ifPage.js";
+import unlessPage from "./helpers/unlessPage.js";
 
 import {
   getPackageInfo,
@@ -19,10 +22,7 @@ import {
   normalizePath,
 } from "vituum/utils/common.js";
 import { renameBuildEnd, renameBuildStart } from "vituum/utils/build.js";
-
-import * as handlebarHelpers from "./helpers";
-
-console.log(handlebarHelpers)
+import svg from "./helpers/svg.js";
 
 const { name } = getPackageInfo(import.meta.url);
 
@@ -192,9 +192,9 @@ const plugin = (options = {}) => {
 
   options = merge(defaultOptions, options);
 
-  Handlebars.registerHelper("ifequal", handlebarHelpers.ifEqual);
-  Handlebars.registerHelper("repeat", handlebarHelpers.repeat);
-  Handlebars.registerHelper("svg", handlebarHelpers.svg);
+  Handlebars.registerHelper("ifequal", ifEqual);
+  Handlebars.registerHelper("repeat", repeat);
+  Handlebars.registerHelper("svg", svg);
 
   return [
     {

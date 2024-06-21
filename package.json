@@ -4,8 +4,8 @@
     "name": "Josh Kerbaugh"
   },
   "version": "1.0.0",
-  "main": "index.js",
-  "types": "types/index.d.ts",
+  "type": "module",
+  "main": "src/index.js",
   "scripts": {
     "tsc": "tsc",
     "eslint": "eslint '**/*.js' --fix"
@@ -26,12 +26,13 @@
     "vite": "^5.0.0"
   },
   "files": [
-    "index.js",
+    "src",
     "types"
   ],
   "exports": {
-    ".": "./index.js",
-    "./types": "./types/*"
+    ".": "./src/index.js",
+    "./helpers/*": "./src/plugins/*",
+    "./package.json": "./package.json"
   },
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
