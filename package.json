@@ -30,8 +30,8 @@
     "types"
   ],
   "exports": {
-    ".": "./src/index.js",
-    "./helpers/*": "./src/plugins/*",
+    ".": "./index.js",
+    "./helpers/*": "./helpers/*",
     "./package.json": "./package.json"
   },
   "engines": {
