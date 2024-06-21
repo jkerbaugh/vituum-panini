@@ -25,14 +25,15 @@
     "typescript": "^5.2.2",
     "vite": "^5.0.0"
   },
+
   "files": [
-    "src",
+    "index.js",
+    "helpers",
     "types"
   ],
   "exports": {
     ".": "./index.js",
-    "./helpers/*": "./helpers/*",
-    "./package.json": "./package.json"
+    "./helpers/*": "./helpers/*"
   },
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
