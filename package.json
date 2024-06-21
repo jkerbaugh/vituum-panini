@@ -5,7 +5,7 @@
   },
   "version": "1.0.0",
   "type": "module",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
     "tsc": "tsc",
     "eslint": "eslint '**/*.js' --fix"
