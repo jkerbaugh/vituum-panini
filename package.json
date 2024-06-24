@@ -28,12 +28,13 @@
 
   "files": [
     "index.js",
-    "panini.js",
+    "lib",
     "helpers",
     "types"
   ],
   "exports": {
-    ".": ["./index.js", "./panini.js"],
+    ".": "./index.js",
+    "./lib/*": "./lib/*",
     "./helpers/*": "./helpers/*"
   },
   "engines": {

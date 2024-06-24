@@ -6,7 +6,7 @@ import Handlebars from "handlebars";
 import fm from "front-matter";
 import stripBom from "strip-bom";
 
-import Panini from "./panini.js";
+import Panini from "./lib/panini.js";
 
 
 import {
