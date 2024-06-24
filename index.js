@@ -112,12 +112,11 @@ const renderTemplate = async (
 
       context = lodash.extend(context, {
         page: basePath,
-        root: relative(resolvedConfig.base, "/"),
+        root: resolvedConfig.base,
       });
 
-
+      
       await panini.loadPageHelpers(context.page)
-
 
       Handlebars.registerPartial("body", pageTemplate);
 
