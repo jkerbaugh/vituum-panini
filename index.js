@@ -6,13 +6,10 @@ import Handlebars from "handlebars";
 import fm from "front-matter";
 import stripBom from "strip-bom";
 
-import ifEqual from "./helpers/ifEqual.js";
-import repeat from "./helpers/repeat.js";
-import ifPage from "./helpers/ifPage.js";
-import unlessPage from "./helpers/unlessPage.js";
+import Panini from "./panini.js";
+
 
 import {
-  getPackageInfo,
   merge,
   pluginBundle,
   pluginMiddleware,
@@ -20,11 +17,14 @@ import {
   pluginTransform,
   processData,
   normalizePath,
+  getPackageInfo
 } from "vituum/utils/common.js";
+
 import { renameBuildEnd, renameBuildStart } from "vituum/utils/build.js";
-import svg from "./helpers/svg.js";
 
 const { name } = getPackageInfo(import.meta.url);
+
+let panini = new Panini(Handlebars);
 
 /**
  * @type {import('@vituum/vite-plugin-handlebars/types').PluginUserConfig}
@@ -32,21 +32,22 @@ const { name } = getPackageInfo(import.meta.url);
 const defaultOptions = {
   reload: true,
   root: null,
-  helpers: {},
+  helpers: {
+    directory: 'helpers'
+  },
   partials: {
-    directory: './src/partials',
-    extname: false,
+    directory: 'partials',
   },
   layouts: {
-    directory: './src/layouts',
+    directory: 'layouts',
     extname: false,
   },
   pageLayouts: [],
   globals: {
     format: "hbs",
   },
-  data: ["src/data/**/*.json"],
-  formats: ["hbs", "json.hbs", "json"],
+  data: ["data/**/*.json"],
+  formats: ["hbs", "json.hbs", "json", 'js', 'scss'],
   handlebars: {
     compileOptions: {},
     runtimeOptions: {},
@@ -61,77 +62,32 @@ const renderTemplate = async (
 ) => {
   const initialFilename = filename.replace(".html", "");
 
-  const output = {};
   let context = options.data
     ? processData(
-        {
-          paths: options.data,
-          root: resolvedConfig.root,
-        },
-        options.globals
-      )
+      {
+        paths: options.data,
+        root: resolvedConfig.root,
+      },
+      options.globals
+    )
     : options.globals;
 
-    const layoutGlob = !options.layouts.directory
-    ? `${normalizePath(options.root)}/**/*.hbs`
-    : `${normalizePath(
-        resolve(resolvedConfig.root, options.layouts.directory)
-      )}/**/*.hbs`;
 
-  let layouts = [];
-
-  FastGlob.sync(layoutGlob)
-    .map((entry) => resolve(resolvedConfig.root, entry))
-    .forEach((path) => {
-      var ext = extname(path);
-      var name = basename(path, ext);
-      var file = fs.readFileSync(path);
-      layouts[name] = Handlebars.compile(file.toString());
-    });
-
-  const partialGlob = !options.partials.directory
-    ? `${normalizePath(options.root)}/**/*.hbs`
-    : `${normalizePath(
-        resolve(resolvedConfig.root, options.partials.directory)
-      )}/**/*.hbs`;
-
-
-  FastGlob.sync(partialGlob)
-    .map((entry) => resolve(resolvedConfig.root, entry))
-    .forEach((path) => {
-      const partialDir = options.partials.directory
-        ? relative(resolvedConfig.root, options.partials.directory)
-        : options.root;
-      const partialName = normalizePath(relative(partialDir, path));
-
-      Handlebars.registerPartial(
-        options.partials.extname
-          ? partialName
-          : partialName.replace(".hbs", ""),
-        fs.readFileSync(path).toString()
-      );
-    });
-
-  if (options.helpers) {
-    Object.keys(options.helpers).forEach((helper) => {
-      Handlebars.registerHelper(helper, options.helpers[helper]);
-    });
-  }
+  await panini.loadPartials();
+  await panini.loadProjectHelpers();
 
   const page = fm(stripBom(content));
-  const basePath = parse(initialFilename).name;
+  const basePath = basename(initialFilename, extname(initialFilename));
 
-  const layout =
-    page.attributes.layout ||
-    (options.pageLayouts && options.pageLayouts[basePath]) ||
-    "default";
+  const layoutName = page.attributes.layout || parse(initialFilename).name;
+  context.template = layoutName;
 
-  context.template = layout;
-
-  return new Promise((resolve) => {
+  const renderInternal = async () => {
+    const output = {};
+  
     try {
-      const layoutTemplate = layouts[context.template];
-
+      const layoutTemplate = panini.getLayout(layoutName)
+  
       if (!layoutTemplate) {
         if (layout === "default") {
           throw new Error(
@@ -143,58 +99,53 @@ const renderTemplate = async (
           );
         }
       }
-
+  
       const pageTemplate = Handlebars.compile(
         page.body,
         options.handlebars.compileOptions
       );
-
+  
       context = lodash.extend(context, page.attributes);
-
+  
       context = lodash.extend(context, {
         page: basePath,
-        layout: layout,
         root: relative(resolvedConfig.base, "/"),
       });
-
-      Handlebars.registerHelper(
-        "ifpage",
-        ifPage(context.page)
-      );
-      Handlebars.registerHelper(
-        "unlesspage",
-        unlessPage(context.page)
-      );
-
+  
+  
+      await panini.loadPageHelpers(context.page)
+  
+  
       Handlebars.registerPartial("body", pageTemplate);
-
+  
       output.content = layoutTemplate(
         context,
         options.handlebars.runtimeOptions
       );
-
-      resolve(output);
     } catch (error) {
       output.error = error;
-
-      resolve(output);
     }
-  });
+  
+    return output;
+  }
+
+  return await renderInternal();
 };
+
+
 
 /**
  * @param {import('@vituum/vite-plugin-handlebars/types').PluginUserConfig} options
  * @returns [import('vite').Plugin]
  */
-const plugin = (options = {}) => {
+const plugin = async (options = {}) => {
   let resolvedConfig;
   let userEnv;
 
   options = merge(defaultOptions, options);
 
-  Handlebars.registerHelper("ifequal", ifEqual);
-  Handlebars.registerHelper("repeat", repeat);
-  Handlebars.registerHelper("svg", svg);
+
+
 
   return [
     {
@@ -202,12 +153,17 @@ const plugin = (options = {}) => {
       config(userConfig, env) {
         userEnv = env;
       },
-      configResolved(config) {
+      async configResolved(config) {
         resolvedConfig = config;
 
         if (!options.root) {
           options.root = config.root;
         }
+
+        panini.setOptions(options, resolvedConfig);
+
+        await panini.loadBuiltInHelpers();
+        await panini.loadLayouts();
       },
       buildStart: async () => {
         if (
