@@ -33,7 +33,7 @@
     "types"
   ],
   "exports": {
-    ".": "./index.js",
+    ".": ["./index.js", "./panini.js"],
     "./helpers/*": "./helpers/*"
   },
   "engines": {
