@@ -73,6 +73,8 @@ const renderTemplate = async (
     : options.globals;
 
 
+  await panini.loadBuiltInHelpers();
+  await panini.loadLayouts();
   await panini.loadPartials();
   await panini.loadProjectHelpers();
 
@@ -84,10 +86,10 @@ const renderTemplate = async (
 
   const renderInternal = async () => {
     const output = {};
-  
+
     try {
       const layoutTemplate = panini.getLayout(layoutName)
-  
+
       if (!layoutTemplate) {
         if (layout === "default") {
           throw new Error(
@@ -99,25 +101,25 @@ const renderTemplate = async (
           );
         }
       }
-  
+
       const pageTemplate = Handlebars.compile(
         page.body,
         options.handlebars.compileOptions
       );
-  
+
       context = lodash.extend(context, page.attributes);
-  
+
       context = lodash.extend(context, {
         page: basePath,
         root: relative(resolvedConfig.base, "/"),
       });
-  
-  
+
+
       await panini.loadPageHelpers(context.page)
-  
-  
+
+
       Handlebars.registerPartial("body", pageTemplate);
-  
+
       output.content = layoutTemplate(
         context,
         options.handlebars.runtimeOptions
@@ -125,7 +127,7 @@ const renderTemplate = async (
     } catch (error) {
       output.error = error;
     }
-  
+
     return output;
   }
 
@@ -144,9 +146,6 @@ const plugin = async (options = {}) => {
 
   options = merge(defaultOptions, options);
 
-
-
-
   return [
     {
       name,
@@ -161,9 +160,6 @@ const plugin = async (options = {}) => {
         }
 
         panini.setOptions(options, resolvedConfig);
-
-        await panini.loadBuiltInHelpers();
-        await panini.loadLayouts();
       },
       buildStart: async () => {
         if (
