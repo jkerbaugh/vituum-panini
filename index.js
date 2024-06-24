@@ -1,4 +1,4 @@
-import { resolve, relative, parse, extname, basename } from "path";
+import { resolve, relative, parse, extname, basename, join } from "path";
 import fs from "fs";
 import FastGlob from "fast-glob";
 import lodash from "lodash";
@@ -46,7 +46,7 @@ const defaultOptions = {
   globals: {
     format: "hbs",
   },
-  data: ["data/**/*.json"],
+  data: ["src/data/**/*.json"],
   formats: ["hbs", "json.hbs", "json", 'js', 'scss'],
   handlebars: {
     compileOptions: {},
@@ -62,16 +62,25 @@ const renderTemplate = async (
 ) => {
   const initialFilename = filename.replace(".html", "");
 
+
+  console.log(process.cwd());
+  console.log(resolvedConfig.root)
+  
   let context = options.data
     ? processData(
-      {
-        paths: options.data,
-        root: resolvedConfig.root,
-      },
-      options.globals
-    )
+        {
+          paths: options.data,
+          root: resolvedConfig.root,
+        },
+        options.globals
+      )
     : options.globals;
 
+
+
+
+    console.log(options.data)
+    console.log(context);
 
   await panini.loadBuiltInHelpers();
   await panini.loadLayouts();
