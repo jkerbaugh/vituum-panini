@@ -71,7 +71,7 @@ const renderTemplate = async (
       )
     : options.globals;
 
-  await panini.loadBuiltInHelpers();
+  await panini.loadBuiltInHelpers(Handlebars);
   await panini.loadLayouts();
   await panini.loadPartials();
   await panini.loadProjectHelpers();
