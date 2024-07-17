@@ -8,7 +8,6 @@ import stripBom from "strip-bom";
 
 import Panini from "./lib/panini.js";
 
-
 import {
   merge,
   pluginBundle,
@@ -17,7 +16,7 @@ import {
   pluginTransform,
   processData,
   normalizePath,
-  getPackageInfo
+  getPackageInfo,
 } from "vituum/utils/common.js";
 
 import { renameBuildEnd, renameBuildStart } from "vituum/utils/build.js";
@@ -33,13 +32,13 @@ const defaultOptions = {
   reload: true,
   root: null,
   helpers: {
-    directory: 'helpers'
+    directory: "helpers",
   },
   partials: {
-    directory: 'partials',
+    directory: "partials",
   },
   layouts: {
-    directory: 'layouts',
+    directory: "layouts",
     extname: false,
   },
   pageLayouts: [],
@@ -47,7 +46,7 @@ const defaultOptions = {
     format: "hbs",
   },
   data: ["src/data/**/*.json"],
-  formats: ["hbs", "json.hbs", "json", 'js', 'scss'],
+  formats: ["hbs", "json.hbs", "json", "js", "scss", "html"],
   handlebars: {
     compileOptions: {},
     runtimeOptions: {},
@@ -62,7 +61,6 @@ const renderTemplate = async (
 ) => {
   const initialFilename = filename.replace(".html", "");
 
-
   let context = options.data
     ? processData(
         {
@@ -73,7 +71,6 @@ const renderTemplate = async (
       )
     : options.globals;
 
-
   await panini.loadBuiltInHelpers();
   await panini.loadLayouts();
   await panini.loadPartials();
@@ -83,22 +80,21 @@ const renderTemplate = async (
   const basePath = basename(initialFilename, extname(initialFilename));
 
   const layoutName = page.attributes.layout || parse(initialFilename).name;
-  context.template = layoutName;
 
   const renderInternal = async () => {
     const output = {};
 
     try {
-      const layoutTemplate = panini.getLayout(layoutName)
+      const layoutTemplate = panini.getLayout(layoutName);
 
       if (!layoutTemplate) {
-        if (layout === "default") {
+        if (layoutName === "default") {
           throw new Error(
             'Panini error: you must have a layout named "default".'
           );
         } else {
           throw new Error(
-            'Panini error: no layout named "' + layout + '" exists.'
+            'Panini error: no layout named "' + layoutName + '" exists.'
           );
         }
       }
@@ -108,15 +104,19 @@ const renderTemplate = async (
         options.handlebars.compileOptions
       );
 
-      context = lodash.extend(context, page.attributes);
+      context = {
+        ...context,
+        ...page.attributes,
+      };
 
-      context = lodash.extend(context, {
+      context = {
+        ...context,
         page: basePath,
+        layout: layoutName,
         root: resolvedConfig.base,
-      });
+      };
 
-      
-      await panini.loadPageHelpers(context.page)
+      await panini.loadPageHelpers(context.page);
 
       Handlebars.registerPartial("body", pageTemplate);
 
@@ -125,16 +125,15 @@ const renderTemplate = async (
         options.handlebars.runtimeOptions
       );
     } catch (error) {
+      console.error(error);
       output.error = error;
     }
 
     return output;
-  }
+  };
 
   return await renderInternal();
 };
-
-
 
 /**
  * @param {import('@vituum/vite-plugin-handlebars/types').PluginUserConfig} options
