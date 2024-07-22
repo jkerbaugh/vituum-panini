@@ -61,6 +61,7 @@ const renderTemplate = async (
 ) => {
   const initialFilename = filename.replace(".html", "");
 
+
   let context = options.data
     ? processData(
         {
@@ -70,6 +71,10 @@ const renderTemplate = async (
         options.globals
       )
     : options.globals;
+
+  if(resolvedConfig.define && resolvedConfig.define.application){
+    context = merge(context, JSON.parse(resolvedConfig.define.application));
+  }
 
   await panini.loadBuiltInHelpers(Handlebars);
   await panini.loadLayouts();
