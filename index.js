@@ -61,6 +61,10 @@ const renderTemplate = async (
 ) => {
   const initialFilename = filename.replace(".html", "");
 
+  await panini.loadBuiltInHelpers(Handlebars);
+  await panini.loadLayouts();
+  await panini.loadPartials();
+  await panini.loadProjectHelpers();
 
   let context = options.data
     ? processData(
@@ -76,10 +80,7 @@ const renderTemplate = async (
     context = merge(context, JSON.parse(resolvedConfig.define.application));
   }
 
-  await panini.loadBuiltInHelpers(Handlebars);
-  await panini.loadLayouts();
-  await panini.loadPartials();
-  await panini.loadProjectHelpers();
+  context = merge(context, { root: resolvedConfig.base });
 
   const page = fm(stripBom(content));
   const basePath = basename(initialFilename, extname(initialFilename));
