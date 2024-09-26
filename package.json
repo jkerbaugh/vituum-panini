@@ -35,7 +35,7 @@
   "exports": {
     ".": "./index.js",
     "./lib/*": "./lib/*",
-    "./helpers/*": "./helpers/*",
+    "./helpers/*": "./helpers/*"
   },
   "engines": {
     "node": "^18.0.0 || >=20.0.0"
