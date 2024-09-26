@@ -122,7 +122,28 @@ const renderTemplate = async (
         root: resolvedConfig.base,
       };
 
-      await panini.loadPageHelpers(context.page);
+      this.Handlebars.registerHelper("ifPage", function() {
+        var params = Array.prototype.slice.call(arguments);
+        var pages = Array.from(params.slice(0, -1));
+        var options = params[params.length - 1];
+    
+        if(pages.includes(basePath))
+          return options.fn(this);
+    
+        return '';
+      });
+  
+      this.Handlebars.registerHelper("unlessPage", function() {
+        var params = Array.prototype.slice.call(arguments);
+        var pages = Array.from(params.slice(0, -1));
+        var options = params[params.length - 1];
+    
+        if(!pages.includes(basePath))
+          return options.fn(this);
+    
+        return '';
+      });
+
 
       Handlebars.registerPartial("body", pageTemplate);
 
