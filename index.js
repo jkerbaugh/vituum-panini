@@ -122,7 +122,10 @@ const renderTemplate = async (
         root: resolvedConfig.base,
       };
 
-      this.Handlebars.registerHelper("ifPage", function() {
+      if(Handlebars.helpers["ifPage"])
+        Handlebars.unregisterHelper("ifPage");
+
+      Handlebars.registerHelper("ifPage", function() {
         var params = Array.prototype.slice.call(arguments);
         var pages = Array.from(params.slice(0, -1));
         var options = params[params.length - 1];
@@ -133,7 +136,10 @@ const renderTemplate = async (
         return '';
       });
   
-      this.Handlebars.registerHelper("unlessPage", function() {
+      if(Handlebars.helpers["unlessPage"])
+        Handlebars.unregisterHelper("unlessPage");
+
+      Handlebars.registerHelper("unlessPage", function() {
         var params = Array.prototype.slice.call(arguments);
         var pages = Array.from(params.slice(0, -1));
         var options = params[params.length - 1];
